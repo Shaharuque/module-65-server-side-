@@ -2,34 +2,63 @@ const express = require('express')
 const app = express()
 const cors=require('cors')
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const ObjectId=require('mongodb').ObjectId
 
 
 const port = process.env.PORT || 5000;
 
 //use middlewares
 app.use(cors())
-//body parser ar kaj korbey(this is short cut)
+//body parser ar kaj korbey(this is short cut)//re.body ar moddhey data pawar jnno
 app.use(express.json())
 
 //mongoDB //password:0123
 const uri = "mongodb+srv://amin:0123@cluster0.yz2oh.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+//backend a get diye jeigula likhbo sheigulai pabo but post diye jegula likhbo sheigula backend url a hit korley pabo na(thats why we use postman for api testing)
 async function run() {
   try {
     await client.connect();
 
+    //database name:fool_express and collection name:users
     const userCollection = client.db("food_express").collection("users");
 
-    // create a document to insert into database
-    const user = { 
-     name:'shik',
-     id:05,
-     email:'shaik@gmail.com'
-    }
+    //GET user from DB and showed into localhost:5000/user URL/api a
+    app.get('/user',async(req,res)=>{
+      
+    // query for movies that have a runtime less than 15 minutes
+    const query = {};
+    //query ar opor base korey DB thekey data niye ashtesey
+    const cursor = userCollection.find(query);
+    //data niye ashar por sei data Array tey convert korey nitey hobey
+    const users=await cursor.toArray()
 
-    const result = await userCollection.insertOne(user);
-    console.log(`A document was inserted with the _id: ${result.insertedId}`);
+    res.send(users)
+    })
+
+    //POST USER: add a new user to DB
+    app.post('/user',async(req,res)=>{
+      const newUser=req.body
+      console.log('adding new user',newUser)
+      const result=await userCollection.insertOne(newUser)    //insertOne means sama data ekbar e insert hobey collection a
+      res.send(result) //client side ajeno error na khay and everydata database a insert ar sathey ekta unique ID o add hoy tar sathey sheita pawar jnno
+    })
+    // create a document to insert into database
+    // const user = { 
+    //  name:'shik',
+    //  id:05,
+    //  email:'shaik@gmail.com'
+    // }
+
+    // const result = await userCollection.insertOne(user);
+    // console.log(`A document was inserted with the _id: ${result.insertedId}`);
+
+    //delete a user
+    app.delete('/user/:id',async(req,res)=>{
+      const id=req.params.id;
+      const query={_id:ObjectId(id)}
+    })
   } finally {
     // await client.close(); //dorkar nai connection active rakhtey chai
   }
