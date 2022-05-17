@@ -37,6 +37,14 @@ async function run() {
     res.send(users)
     })
 
+    //find user using GET operation
+    app.get('/user/:id',async(req,res)=>{
+      const id=req.params.id //for getting dynamic url id part
+      const query = {_id:ObjectId(id)};
+      const user = await userCollection.findOne(query);
+      res.send(user) //response ta jassey client side a
+    })
+
     //POST USER: add a new user to DB
     app.post('/user',async(req,res)=>{
       const newUser=req.body
@@ -54,10 +62,37 @@ async function run() {
     // const result = await userCollection.insertOne(user);
     // console.log(`A document was inserted with the _id: ${result.insertedId}`);
 
+
+
+    //update user
+    app.put('/user/:id',async(req,res)=>{
+      const id=req.params.id
+      const updateUser=req.body
+
+    // create a filter for a movie to update
+    const filter = {_id:ObjectId(id)};
+    // this option instructs the method to create a document if no documents match the filter
+    const options = { upsert: true };
+    
+    //particular id wise user ar jei jei field/property update kortey chai 
+    const updateDoc = {
+      $set: {
+        userName:updateUser.userName,
+        userEmail:updateUser.userEmail,
+      }, 
+    };
+
+    const result = await userCollection.updateOne(filter, updateDoc,options);
+    res.send(result)
+
+    })
     //delete a user
     app.delete('/user/:id',async(req,res)=>{
       const id=req.params.id;
+      //query diye bujha jabey kojn user k delete kortese
       const query={_id:ObjectId(id)}
+      const result = await userCollection.deleteOne(query);
+      res.send(result)
     })
   } finally {
     // await client.close(); //dorkar nai connection active rakhtey chai
